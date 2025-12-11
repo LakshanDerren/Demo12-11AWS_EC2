@@ -1,8 +1,8 @@
-require('dotenv').config(); // Load environment variables locally if needed
+import 'dotenv/config';
 import express, { json } from 'express';
 import { connect } from 'mongoose';
 import cors from 'cors';
-import router from './router';
+import router from './router.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
