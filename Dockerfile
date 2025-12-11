@@ -20,7 +20,7 @@ COPY . .
 # RUN npm run build
 
 # ==========================================
-# STAGE 2: The "Production" (Showroom)
+# STAGE 2: The "Production" 
 # ==========================================
 FROM node:18-alpine
 
