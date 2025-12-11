@@ -5,11 +5,8 @@ on:
     branches: [ "main" ]
 
 jobs:
-  # JOB 1: BUILD & PUSH
-  # This job runs on GitHub's servers to build the image and send it to Docker Hub
   build:
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -29,13 +26,10 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          # Replace 'your-username' with your actual Docker Hub username
           tags: ${{ secrets.DOCKER_USERNAME }}/demo12-11aws_ec2:latest
 
-  # JOB 2: DEPLOY
-  # This job only runs if 'build' finishes successfully
   deploy:
-    needs: build  # <-- Important: Waits for build to finish
+    needs: build
     runs-on: ubuntu-latest
 
     steps:
@@ -45,22 +39,26 @@ jobs:
           host: ${{ secrets.HOST_DNS }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          # We pass the secrets into the script so we can use them inside the EC2
           envs: DOCKER_USERNAME,DOCKER_PASSWORD
           script: |
-            # 1. Login to Docker Hub on the EC2 (so it can pull private images)
-            echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+            # 1. Login using FULL PATH
+            echo $DOCKER_PASSWORD | /usr/bin/docker login -u $DOCKER_USERNAME --password-stdin
 
-            # 2. Stop and remove the old container
-            docker stop demo12-11aws_ec2 || true
-            docker rm demo12-11aws_ec2 || true
+            # 2. Stop the CORRECT container name
+            # We use the same name here as we do in the 'run' command below
+            /usr/bin/docker stop my-api-container || true
+            /usr/bin/docker rm my-api-container || true
 
-            # 3. Pull the NEW image we just built in Job 1
-            docker pull ${{ secrets.DOCKER_USERNAME }}/demo12-11aws_ec2:latest
+            # 3. Pull the new image
+            /usr/bin/docker pull ${{ secrets.DOCKER_USERNAME }}/demo12-11aws_ec2:latest
 
             # 4. Run the new container
-            # We map port 80 on the server to port 3000 (standard Node port) inside the container
-            docker run -d --name my-api-container -p 80:3000 --restart always -e MONGO_URI="${{ secrets.MONGO_URI }}" ${{ secrets.DOCKER_USERNAME }}/demo12-11aws_ec2:latest
+            /usr/bin/docker run -d \
+              --name my-api-container \
+              -p 80:3000 \
+              --restart always \
+              -e MONGO_URI="${{ secrets.MONGO_URI }}" \
+              ${{ secrets.DOCKER_USERNAME }}/demo12-11aws_ec2:latest
             
-            # 5. Clean up unused images to save disk space
-            docker image prune -f
+            # 5. Clean up
+            /usr/bin/docker image prune -f
