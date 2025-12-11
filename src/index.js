@@ -15,7 +15,7 @@ app.use(cors());
 const dbURI = process.env.MONGO_URI;
 
 if (!dbURI) {
-  console.error("❌ ERROR: MONGO_URI is missing! Check your .env file or GitHub Secrets.");
+  console.error("❌ ERROR: MONGO_URI is missing yoo! Check your .env file or GitHub Secrets.");
   process.exit(1);
 }
 
